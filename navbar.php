@@ -67,5 +67,5 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
         </div>
     </div>
 </div>
-bagus
+bagus sekali
 <!-- Navbar & Hero End -->
