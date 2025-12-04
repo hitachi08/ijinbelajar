@@ -67,4 +67,5 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
         </div>
     </div>
 </div>
+
 <!-- Navbar & Hero End -->
