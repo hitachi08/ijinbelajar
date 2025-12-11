@@ -12,6 +12,11 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
     .hero-header .container {
         height: 100%;
     }
+
+    .free-icon {
+        width: 80px;
+        height: auto;
+    }
 </style>
 <!-- Spinner Start -->
 <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
@@ -22,7 +27,7 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
 <!-- Spinner End -->
 
 <!-- Navbar & Hero Start -->
-<div class="container-xxl position-relative p-0">
+<div class="container-xxl position-relative p-0 mb-5">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 px-lg-5 py-3 py-lg-0">
         <a href="index.php" class="navbar-brand d-flex align-items-center p-0">
             <img src="img/Logo_Undana.png" alt="Logo Universitas" style="height:50px;" class="me-2">
@@ -33,39 +38,44 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto py-0 pe-4">
-                <a href="index.php" class="nav-item nav-link <?= ($activePage == 'index') ? 'active' : '' ?>">Home</a>
-                <a href="about.php" class="nav-item nav-link <?= ($activePage == 'about') ? 'active' : '' ?>">About</a>
-                <a href="service.php" class="nav-item nav-link <?= ($activePage == 'service') ? 'active' : '' ?>">Service</a>
-                <a href="menu.php" class="nav-item nav-link <?= ($activePage == 'menu') ? 'active' : '' ?>">Menu</a>
-
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle <?=
-                                                                in_array($activePage, ['booking', 'team', 'testimonial']) ? 'active' : ''
-                                                                ?>" data-bs-toggle="dropdown">Pages</a>
-                    <div class="dropdown-menu m-0">
-                        <a href="booking.php" class="dropdown-item <?= ($activePage == 'booking') ? 'active' : '' ?>">Booking</a>
-                        <a href="team.php" class="dropdown-item <?= ($activePage == 'team') ? 'active' : '' ?>">Our Team</a>
-                        <a href="testimonial.php" class="dropdown-item <?= ($activePage == 'testimonial') ? 'active' : '' ?>">Testimonial</a>
-                    </div>
-                </div>
-
-                <a href="contact.php" class="nav-item nav-link <?= ($activePage == 'contact') ? 'active' : '' ?>">Contact</a>
+                <a href="#beranda" class="nav-item nav-link">Beranda</a>
+                <a href="#tentang" class="nav-item nav-link">Tentang</a>
+                <a href="#prosedur" class="nav-item nav-link">Prosedur</a>
+                <a href="#dokumen" class="nav-item nav-link">Dokumen</a>
             </div>
-            <a href="" class="btn btn-primary py-2 px-4">Login</a>
+            <a href="login.php" class="btn btn-primary py-2 px-4">Login</a>
         </div>
     </nav>
 
-    <div class="container-xxl hero-header bg-dark mb-5">
+    <div class="container-xxl hero-header bg-dark mb-5" id="beranda">
         <div class="container">
             <div class="row align-items-center g-5" style="height:100%;">
                 <div class="col-lg-6 text-center text-lg-start">
-                    <h1 class="display-3 text-white animated slideInLeft">Enjoy Our<br>Delicious Meal</h1>
-                    <p class="text-white animated slideInLeft mb-4 pb-2">Lorem ipsum dolor sit amet...</p>
-                    <a href="" class="btn btn-primary py-sm-3 px-sm-5 me-3 animated slideInLeft">Registrasi</a>
+                    <h1 class="display-6 text-white animated slideInLeft">Layanan Izin Belajar<br>Mahasiswa Asing</h1>
+                    <p class="text-white animated slideInLeft mb-4 pb-2">
+                        Portal pelayanan penerbitan Surat Rekomendasi Izin
+                        Belajar Mahasiswa Asing pada Program Studi Akademik
+                        dan Perguruan Tinggi Akademik di lingkungan Universitas Nusa Cendana.
+                    </p>
+                    <a href="registrasi.php" class="btn btn-primary py-sm-3 px-sm-5 me-3 animated slideInLeft">Registrasi</a>
+                </div>
+                <div class="col-lg-6 d-flex justify-content-center justify-content-lg-center align-items-center">
+                    <div class="text-center animated slideInRight">
+                        <img src="img/no-corruption.png" alt="Gratis" class="mb-3 free-icon">
+                        <h4 class="text-white fw-bold">
+                            Semua Layanan Kami Gratis!
+                        </h4>
+                        <p class="text-white animated slideInRight mb-4 pb-2">
+                            Jika ada pungutan, jangan ragu melaporkan melalui:
+                            <br>
+                            <a href="mailto:iroundana@undana.ac.id" class="text-warning">
+                                iroundana@undana.ac.id
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-bagus sekali
 <!-- Navbar & Hero End -->
