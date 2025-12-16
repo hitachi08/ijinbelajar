@@ -101,21 +101,27 @@
                 <div class="d-flex justify-content-between align-items-center mb-4 pe-2">
                   <h5 class="fw-bold m-0">Pengajuan Pembuatan Izin Belajar</h5>
 
-                  <a href="pengajuan.php" class="fs-2" data-bs-toggle="tooltip" title="Buat Izin Baru">
-                    <i class="bi bi-plus"></i>
-                  </a>
+                  <div class="ms-2">
+                    <a href="pengajuan.php" class="fs-2" data-bs-toggle="tooltip" title="Buat Izin Baru">
+                      <i class="bi bi-plus"></i>
+                    </a>
+                    <a href="pengajuan.php" class="fs-2" data-bs-toggle="tooltip" title="Perpanjang Izin Belajar">
+                      <i class="bi bi-hourglass-split"></i>
+                    </a>
+                  </div>
                 </div>
 
                 <div class="table-responsive p-2">
                   <table id="tabelPengajuan" class="table table-striped table-bordered w-100">
                     <thead>
                       <tr>
-                        <th>No</th>
-                        <th>Nama Mahasiswa</th>
-                        <th>NIM / Passport</th>
-                        <th>Program Studi</th>
-                        <th>Tanggal Pengajuan</th>
+                        <th>Nama</th>
+                        <th>Institusi</th>
                         <th>Status</th>
+                        <th>Tipe Dokumen</th>
+                        <th>Tanggal Dokumen</th>
+                        <th>No Surat</th>
+                        <th>Lama Izin</th>
                         <th>Aksi</th>
                       </tr>
                     </thead>

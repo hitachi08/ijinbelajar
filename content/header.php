@@ -28,7 +28,6 @@
                     <ul>
                         <li><a href="pengajuan.php">Pengajuan Izin Belajar</a></li>
                         <li><a href="daftar.php">Daftar Pengajuan</a></li>
-                        <li><a href="">Pelaporan </a></li>
                     </ul>
                 </li>
             </ul>
@@ -63,7 +62,7 @@
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                    <li><a class="dropdown-item" href="../login.php">Logout</a></li>
                 </ul>
             </div>
 

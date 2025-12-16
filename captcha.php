@@ -7,7 +7,7 @@ for ($i = 0; $i < 6; $i++) {
     $captcha .= $characters[rand(0, strlen($characters) - 1)];
 }
 
-$_SESSION['captcha_code'] = password_hash($captcha, PASSWORD_DEFAULT);
+$_SESSION['captcha'] = password_hash($captcha, PASSWORD_DEFAULT);
 $_SESSION['captcha_time'] = time();
 
 $width = 160;

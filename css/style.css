@@ -165,14 +165,13 @@
   background-size: cover;
 }
 
-.hero-header img {
-  animation: imgRotate 50s linear infinite;
-}
-
-@keyframes imgRotate {
-  100% {
-    transform: rotate(360deg);
-  }
+.hero-bg {
+  background: linear-gradient(rgba(15, 23, 43, 0.9), rgba(15, 23, 43, 0.9)),
+    url(../img/UndanaBG.jpg);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
