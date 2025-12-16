@@ -59,13 +59,13 @@ $activePage = basename($_SERVER['PHP_SELF'], ".php");
         <div class="container">
             <div class="row align-items-center g-5" style="height:100%;">
                 <div class="col-lg-6 text-center text-lg-start">
-                    <h1 class="display-3 text-white animated slideInLeft">Enjoy Our<br>Delicious Meal</h1>
-                    <p class="text-white animated slideInLeft mb-4 pb-2">Lorem ipsum dolor sit amet...</p>
+                    <h2 class="display-3 text-white animated slideInLeft">Selamat datang di di sistem layanan ijin belajar</h2>
+                    
                     <a href="" class="btn btn-primary py-sm-3 px-sm-5 me-3 animated slideInLeft">Registrasi</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-bagus sekali
+
 <!-- Navbar & Hero End -->
