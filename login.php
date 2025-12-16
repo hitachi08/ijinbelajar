@@ -45,7 +45,14 @@
                         </div>
 
                         <!-- FORM -->
-                        <form action="proses_login.php" method="post">
+                        <?php
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                            header("Location: content/");
+                            exit;
+                        }
+                        ?>
+
+                        <form method="post">
 
                             <div class="mb-3">
                                 <label class="form-label">
@@ -61,7 +68,6 @@
                                 <input type="password" name="password" class="form-control" required>
                             </div>
 
-                            <!-- LUPA PASSWORD -->
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <div></div>
                                 <a href="lupa_password.php" class="text-primary text-decoration-none">
@@ -70,13 +76,13 @@
                                 </a>
                             </div>
 
-                            <!-- SUBMIT -->
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary py-3">
                                     <i class="fa fa-sign-in-alt me-2"></i>
                                     Login
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>
