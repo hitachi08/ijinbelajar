@@ -1,10 +1,34 @@
+<?php
+session_start();
+require '../config/db.php';
+
+// Ambil data user untuk header/profile
+if (isset($_SESSION['user_id'])) {
+  $stmt = $conn->prepare("SELECT username, profile_photo FROM users WHERE id_user = ?");
+  $stmt->execute([$_SESSION['user_id']]);
+  $user = $stmt->fetch();
+} else {
+  $user = ['username' => 'Guest', 'profile_photo' => 'user.png'];
+}
+
+// Ambil draft izin terakhir user (jika ada)
+$ID_IZIN = null;
+if (isset($_SESSION['user_id'])) {
+  $stmt = $conn->prepare("SELECT id_izin FROM izin_belajar WHERE id_user = ? AND jenis_pengajuan = 'baru' ORDER BY created_at DESC LIMIT 1");
+  $stmt->execute([$_SESSION['user_id']]);
+  $lastIzin = $stmt->fetch(PDO::FETCH_ASSOC);
+  $ID_IZIN = $lastIzin['id_izin'] ?? null;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Pengajuan Baru - Sistem Perizinan Mahasiswa Asing</title>
+  <title>Pengajuan Baru - Sistem P
+    erizinan Mahasiswa Asing</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -52,7 +76,7 @@
 
         </div>
 
-        <div class="row">
+        <div class="row" data-aos="fade-up">
           <div class="col-md-3">
             <div class="nav flex-column" id="v-tabs" role="tablist">
 
@@ -94,361 +118,469 @@
 
                 <!-- TAB 1 – IDENTITAS -->
                 <div class="tab-pane fade show active" id="content-identitas" role="tabpanel">
+                  <form id="form-identitas"
+                    data-action="../ajax/save_identitas.php"
+                    enctype="multipart/form-data">
 
-                  <h5 class="fw-bold mb-3">Identitas</h5>
+                    <input type="hidden" name="id_izin">
 
-                  <div class="row g-3">
+                    <h5 class="fw-bold mb-3">Identitas</h5>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
+                    <div class="row g-3">
 
-                    <div class="col-md-6">
-                      <label class="form-label">Tempat / Tanggal Lahir
-                        <span class="text-danger">*</span>
-                      </label>
+                      <div class="col-md-6">
+                        <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_lengkap" class="form-control">
+                      </div>
 
-                      <div class="row g-2">
-                        <!-- TEMPAT LAHIR -->
-                        <div class="col-5">
-                          <input type="text" class="form-control">
-                        </div>
-                        <!-- TANGGAL LAHIR -->
-                        <div class="col-7">
-                          <input type="date" class="form-control">
+                      <div class="col-md-6">
+                        <label class="form-label">Tempat / Tanggal Lahir
+                          <span class="text-danger">*</span>
+                        </label>
+
+                        <div class="row g-2">
+                          <!-- TEMPAT LAHIR -->
+                          <div class="col-5">
+                            <input type="text" name="tempat_lahir" class="form-control">
+                          </div>
+                          <!-- TANGGAL LAHIR -->
+                          <div class="col-7">
+                            <input type="date" name="tanggal_lahir" class="form-control">
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
+                      <div class="col-md-6">
+                        <label class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
 
-                      <div class="d-flex gap-4 mt-1">
+                        <div class="d-flex gap-4 mt-1">
 
-                        <!-- Laki-laki -->
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="jenis_kelamin" id="jkLaki" value="Laki-laki">
-                          <label class="form-check-label" for="jkLaki">
-                            Laki-laki
-                          </label>
+                          <!-- Laki-laki -->
+                          <div class="form-check">
+                            <input class="form-check-input" type="radio" name="jenis_kelamin" id="jkLaki" value="Laki-laki">
+                            <label class="form-check-label" for="jkLaki">
+                              Laki-laki
+                            </label>
+                          </div>
+
+                          <!-- Perempuan -->
+                          <div class="form-check">
+                            <input class="form-check-input" type="radio" name="jenis_kelamin" id="jkPerempuan" value="Perempuan">
+                            <label class="form-check-label" for="jkPerempuan">
+                              Perempuan
+                            </label>
+                          </div>
+
                         </div>
-
-                        <!-- Perempuan -->
-                        <div class="form-check">
-                          <input class="form-check-input" type="radio" name="jenis_kelamin" id="jkPerempuan" value="Perempuan">
-                          <label class="form-check-label" for="jkPerempuan">
-                            Perempuan
-                          </label>
-                        </div>
-
                       </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Kebangsaan <span class="text-danger">*</span></label>
+                        <select name="kebangsaan" class="form-select select-country">
+                          <option value="">Pilih Kebangsaan</option>
+                        </select>
+                      </div>
+
+                      <hr class="mt-4">
+
+                      <!-- Tempat Tinggal -->
+                      <h6 class="fw-bold">Tempat Tinggal</h6>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Alamat Rumah <span class="text-danger">*</span></label>
+                        <input type="text" name="alamat_rumah" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Kota <span class="text-danger">*</span></label>
+                        <input type="text" name="kota" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Provinsi / Negara Bagian <span class="text-danger">*</span></label>
+                        <input type="text" name="provinsi" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Negara <span class="text-danger">*</span></label>
+                        <select name="negara" class="form-select select-country">
+                          <option value="">Pilih Negara</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Kode Pos <span class="text-danger">*</span></label>
+                        <input type="text" name="kode_pos" class="form-control">
+                      </div>
+
+                      <hr class="mt-4">
+
+                      <!-- Tinggal Indonesia -->
+                      <h6 class="fw-bold">Tempat Tinggal di Indonesia</h6>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Alamat Terkini <span class="text-danger">*</span></label>
+                        <input type="text" name="alamat_indonesia" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Kota <span class="text-danger">*</span></label>
+                        <input type="text" name="kota_indonesia" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Provinsi <span class="text-danger">*</span></label>
+                        <input type="text" name="provinsi_indonesia" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Kode Pos <span class="text-danger">*</span></label>
+                        <input type="text" name="kode_pos_indonesia" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Telp / Handphone <span class="text-danger">*</span></label>
+                        <input type="text" name="no_hp" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Foto (jpg/png) <span class="text-danger">*</span></label>
+
+                        <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png">
+                        <small class="text-muted d-block mt-1">Max Size: 500 KB</small>
+
+                        <div class="mt-2">
+                          <div style="width: 150px; height: 200px; overflow: hidden; border: 1px solid #ccc; border-radius: 5px;">
+                            <img id="foto-preview" src="" alt="Foto Mahasiswa" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                          </div>
+                        </div>
+
+                        <input type="hidden" name="foto_lama" id="foto_lama">
+                      </div>
+
                     </div>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Kebangsaan <span class="text-danger">*</span></label>
-                      <select class="form-select select-country">
-                        <option value="">Pilih Kebangsaan</option>
-                      </select>
+                    <div class="d-flex justify-content-end mt-4 gap-2">
+                      <button type="button" class="btn btn-secondary btn-cancel" style="display:none;">Batal</button>
+                      <button type="button" class="btn btn-primary btn-next" data-next="#tab-studi">
+                        Save & Next
+                      </button>
                     </div>
-
-                    <hr class="mt-4">
-
-                    <!-- Tempat Tinggal -->
-                    <h6 class="fw-bold">Tempat Tinggal</h6>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Alamat Rumah <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Kota <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Provinsi / Negara Bagian <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Negara <span class="text-danger">*</span></label>
-                      <select class="form-select select-country">
-                        <option value="">Pilih Negara</option>
-                      </select>
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Kode Pos <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <hr class="mt-4">
-
-                    <!-- Tinggal Indonesia -->
-                    <h6 class="fw-bold">Tempat Tinggal di Indonesia</h6>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Alamat Terkini <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Kota <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Provinsi <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Kode Pos <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Email</label>
-                      <input type="email" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Telp / Handphone <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Foto (jpg/png) <span class="text-danger">*</span></label>
-                      <input type="file" class="form-control">
-                      <small class="text-muted">Max Size : 500 kb</small>
-                    </div>
-
-                  </div>
-
-                  <div class="d-flex justify-content-end mt-4">
-                    <button class="btn btn-primary btn-next" data-next="#tab-studi">
-                      Save & Next
-                    </button>
-                  </div>
-
+                  </form>
                 </div>
 
                 <!-- TAB 2 – INFORMASI STUDI -->
                 <div class="tab-pane fade" id="content-studi" role="tabpanel">
+                  <form id="form-studi"
+                    data-action="../ajax/save_studi.php"
+                    enctype="multipart/form-data">
 
-                  <h5 class="fw-bold mb-3">Informasi Studi</h5>
+                    <input type="hidden" name="id_izin">
 
-                  <div class="row g-3">
+                    <h5 class="fw-bold mb-3">Informasi Studi</h5>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Universitas</label>
-                      <select class="form-select">
-                        <option>Pilih Universitas</option>
-                        <option>Universitas Nusa Cendana</option>
-                      </select>
+                    <div class="row g-3">
+
+                      <div class="col-md-6">
+                        <label class="form-label">Universitas</label>
+                        <select name="universitas" class="form-select" required>
+                          <option value="">Pilih Universitas</option>
+                          <option value="Universitas Nusa Cendana">Universitas Nusa Cendana</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Program / Jenjang Studi</label>
+                        <select name="jenjang_studi" class="form-select" id="jenjang">
+                          <option value="">Pilih Jenjang Studi</option>
+
+                          <optgroup label="Non-Gelar">
+                            <option value="Student Exchange">Student Exchange</option>
+                            <option value="Short Course">Short Course</option>
+                            <option value="Magang">Magang</option>
+                            <option value="Profesi">Profesi</option>
+                            <option value="Student Exchange-BiPA">Student Exchange-BiPA</option>
+                          </optgroup>
+
+                          <optgroup label="Gelar">
+                            <option value="D4">D4</option>
+                            <option value="D-3">D-3</option>
+                            <option value="SP-1">SP-1</option>
+                            <option value="S-1">S-1</option>
+                            <option value="S-2">S-2</option>
+                            <option value="S-3">S-3</option>
+                            <option value="Student Exchange - Joint Program">Student Exchange - Joint Program</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Dok. Kerjasama (MOU/MOA)</label>
+                        <input type="file" name="dok_kerjasama" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+
+                        <small class="text-muted">jpg/png/pdf — Max 500 KB</small>
+
+                        <div class="mt-2">
+                          <a id="dokumen-lama" href="#" target="_blank" style="display:none">
+                            Lihat dokumen sebelumnya
+                          </a>
+                        </div>
+
+                        <input type="hidden" name="dok_kerjasama_lama" id="dok_kerjasama_lama">
+                      </div>
+
+                      <hr class="my-4">
+
+                      <h6 class="fw-bold">Pengajuan Periode Ijin Belajar</h6>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Mulai Belajar</label>
+                        <input type="date" name="mulai_belajar" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Lama Ijin Studi</label>
+                        <select name="lama_studi" class="form-select">
+                          <option>3 Bulan</option>
+                          <option>4 Bulan</option>
+                          <option>5 Bulan</option>
+                          <option>6 Bulan</option>
+                          <option>7 Bulan</option>
+                          <option>8 Bulan</option>
+                          <option>9 Bulan</option>
+                          <option>10 Bulan</option>
+                          <option>11 Bulan</option>
+                          <option>12 Bulan</option>
+                          <option>24 Bulan</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Dari</label>
+                        <input type="date" name="periode_dari" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Sampai</label>
+                        <input type="date" name="periode_sampai" class="form-control">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Lokasi Belajar (Provinsi)</label>
+                        <select name="lokasi_provinsi" class="form-select">
+                          <option value="">Pilih Provinsi</option>
+                          <option value="Nusa Tenggara Timur">Nusa Tenggara Timur</option>
+                        </select>
+                      </div>
+
                     </div>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Program / Jenjang Studi</label>
-                      <select class="form-select" id="jenjang">
-                        <option value="">Pilih Jenjang Studi</option>
-
-                        <optgroup label="Non-Gelar">
-                          <option value="Student Exchange">Student Exchange</option>
-                          <option value="Short Course">Short Course</option>
-                          <option value="Magang">Magang</option>
-                          <option value="Profesi">Profesi</option>
-                          <option value="Student Exchange-BiPA">Student Exchange-BiPA</option>
-                        </optgroup>
-
-                        <optgroup label="Gelar">
-                          <option value="D4">D4</option>
-                          <option value="D-3">D-3</option>
-                          <option value="SP-1">SP-1</option>
-                          <option value="S-1">S-1</option>
-                          <option value="S-2">S-2</option>
-                          <option value="S-3">S-3</option>
-                          <option value="Student Exchange - Joint Program">Student Exchange - Joint Program</option>
-                        </optgroup>
-                      </select>
+                    <div class="d-flex justify-content-end mt-4 gap-2">
+                      <button type="button" class="btn btn-secondary btn-cancel" style="display:none;">Batal</button>
+                      <button type="button" class="btn btn-primary btn-next" data-next="#tab-dokumen">
+                        Save & Next
+                      </button>
                     </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Dok. Kerjasama (MOU/MOA)</label>
-                      <input type="file" class="form-control">
-                      <small class="text-muted">jpg/png/pdf — Max 500 KB</small>
-                    </div>
-
-                    <hr class="my-4">
-
-                    <h6 class="fw-bold">Pengajuan Periode Ijin Belajar</h6>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Mulai Belajar</label>
-                      <input type="date" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Lama Ijin Studi</label>
-                      <select class="form-select">
-                        <option>3 Bulan</option>
-                        <option>6 Bulan</option>
-                        <option>12 Bulan</option>
-                      </select>
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Dari</label>
-                      <input type="date" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Sampai</label>
-                      <input type="date" class="form-control">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Lokasi Belajar (Provinsi)</label>
-                      <select class="form-select">
-                        <option>Pilih Provinsi</option>
-                        <option>Nusa Tenggara Timur</option>
-                        <option>Bali</option>
-                      </select>
-                    </div>
-
-                  </div>
-
-                  <div class="d-flex justify-content-end mt-4">
-                    <button class="btn btn-primary btn-next" data-next="#tab-dokumen">
-                      Save & Next
-                    </button>
-                  </div>
-
+                  </form>
                 </div>
 
                 <!-- TAB 3 – DOKUMEN PENDUKUNG -->
                 <div class="tab-pane fade" id="content-dokumen" role="tabpanel">
 
-                  <h5 class="fw-bold mb-3">Dokumen Pendukung</h5>
+                  <form id="form-dokumen"
+                    data-action="../ajax/save_dokumen.php"
+                    enctype="multipart/form-data">
 
-                  <div class="row g-3">
+                    <input type="hidden" name="id_izin">
 
-                    <h6 class="fw-bold">Paspor</h6>
+                    <h5 class="fw-bold mb-3">Dokumen Pendukung</h5>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Nomor</label>
-                      <input type="text" class="form-control">
-                    </div>
+                    <div class="row g-3">
 
-                    <div class="col-md-6">
-                      <label class="form-label">Tanggal Pengajuan</label>
-                      <input type="date" class="form-control">
-                    </div>
+                      <h6 class="fw-bold">Paspor</h6>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Tanggal Berakhir</label>
-                      <input type="date" class="form-control">
-                    </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Nomor</label>
+                        <input type="text" name="nomor_paspor" class="form-control">
+                      </div>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Scan Passport</label>
-                      <input type="file" class="form-control">
-                      <small class="text-muted">jpg/png/pdf — Max 500 KB</small>
-                    </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Tanggal Pengajuan</label>
+                        <input type="date" name="tanggal_pengajuan" class="form-control">
+                      </div>
 
-                    <hr class="my-4">
+                      <div class="col-md-6">
+                        <label class="form-label">Tanggal Berakhir</label>
+                        <input type="date" name="tanggal_berakhir" class="form-control">
+                      </div>
 
-                    <h6 class="fw-bold">Dokumen Pendukung (Pendanaan, Rekomendasi, LOA)</h6>
+                      <div class="col-md-6">
+                        <label class="form-label">Scan Passport</label>
 
-                    <div class="col-md-6">
-                      <label class="form-label">Jenis Pendanaan</label>
-                      <select class="form-select">
-                        <option>Pilih Jenis Pendanaan</option>
-                        <option>Biaya Mandiri</option>
-                        <option>Beasiswa</option>
-                        <option>Lain-lain</option>
-                      </select>
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Penyedia Beasiswa</label>
-                      <input type="text" class="form-control" placeholder="Misal: Orang Tua, Pemerintah, dll">
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Jabatan Penjamin</label>
-                      <input type="text" class="form-control" placeholder="Misal: Rektor, Direktur, Ketua Prodi">
-                    </div>
-
-                    <div class="col-12 pt-2">
-                      <div class="row">
-                        <div class="col-md-3">
-                          <label class="form-label">Surat Jaminan Keuangan</label>
+                        <div class="file-input-wrapper">
+                          <input type="file" name="scan_paspor" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                          <small class="text-muted">jpg/png/pdf — Max 500 KB</small>
                         </div>
-                        <div class="col-md-9">
-                          <input type="file" class="form-control">
-                          <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+
+                        <div class="file-review mt-1" style="display:none;">
+                          <a id="scan_paspor-lama" target="_blank">
+                            Lihat Dokumen sebelumnya
+                          </a>
                         </div>
                       </div>
-                    </div>
 
-                    <div class="col-12">
-                      <div class="row">
-                        <div class="col-md-3">
-                          <label class="form-label">Surat Pernyataan</label>
-                        </div>
-                        <div class="col-md-9">
-                          <input type="file" class="form-control">
-                          <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                      <hr class="my-4">
+
+                      <h6 class="fw-bold">Dokumen Pendukung (Pendanaan, Rekomendasi, LOA)</h6>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Jenis Pendanaan</label>
+                        <select name="jenis_pendanaan" class="form-select">
+                          <option value="">Pilih Jenis Pendanaan</option>
+                          <option value="Biaya Mandiri">Biaya Mandiri</option>
+                          <option value="Beasiswa">Beasiswa</option>
+                          <option value="Lain-lain">Lain-lain</option>
+                        </select>
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Penyedia Beasiswa</label>
+                        <input type="text" name="penyedia_beasiswa" class="form-control"
+                          placeholder="Misal: Orang Tua, Pemerintah, dll">
+                      </div>
+
+                      <div class="col-md-6">
+                        <label class="form-label">Jabatan Penjamin</label>
+                        <input type="text" name="jabatan_penjamin" class="form-control"
+                          placeholder="Misal: Rektor, Direktur, Ketua Prodi">
+                      </div>
+
+                      <div class="col-12 pt-2">
+                        <div class="row">
+                          <div class="col-md-3">
+                            <label class="form-label">Surat Keuangan</label>
+                          </div>
+                          <div class="col-md-9">
+
+                            <div class="file-input-wrapper">
+                              <input type="file" name="surat_jaminan" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                              <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            </div>
+
+                            <div class="file-review mt-1" style="display:none;">
+                              <a id="surat_jaminan-lama" target="_blank">
+                                Lihat Dokumen sebelumnya
+                              </a>
+                            </div>
+
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div class="col-12">
-                      <div class="row">
-                        <div class="col-md-3">
-                          <label class="form-label">Surat Kesehatan (Medical Statement)</label>
-                        </div>
-                        <div class="col-md-9">
-                          <input type="file" class="form-control">
-                          <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                      <div class="col-12">
+                        <div class="row">
+                          <div class="col-md-3">
+                            <label class="form-label">Surat Pernyataan</label>
+                          </div>
+                          <div class="col-md-9">
+
+                            <div class="file-input-wrapper">
+                              <input type="file" name="surat_pernyataan" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                              <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            </div>
+
+                            <div class="file-review mt-1" style="display:none;">
+                              <a id="surat_pernyataan-lama" target="_blank">
+                                Lihat Dokumen sebelumnya
+                              </a>
+                            </div>
+
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div class="col-12">
-                      <div class="row">
-                        <div class="col-md-3">
-                          <label class="form-label">Letter of Acceptance</label>
-                        </div>
-                        <div class="col-md-9">
-                          <input type="file" class="form-control">
-                          <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
-                        </div>
-                      </div>
-                    </div>
+                      <div class="col-12">
+                        <div class="row">
+                          <div class="col-md-3">
+                            <label class="form-label">Surat Kesehatan</label>
+                          </div>
+                          <div class="col-md-9">
 
-                    <div class="col-12">
-                      <div class="row">
-                        <div class="col-md-3">
-                          <label class="form-label">Ijazah Terakhir</label>
-                        </div>
-                        <div class="col-md-9">
-                          <input type="file" class="form-control">
-                          <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            <div class="file-input-wrapper">
+                              <input type="file" name="surat_kesehatan" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                              <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            </div>
+
+                            <div class="file-review mt-1" style="display:none;">
+                              <a id="surat_kesehatan-lama" target="_blank">
+                                Lihat Dokumen sebelumnya
+                              </a>
+                            </div>
+
+                          </div>
                         </div>
                       </div>
+
+                      <div class="col-12">
+                        <div class="row">
+                          <div class="col-md-3">
+                            <label class="form-label">Letter of Acceptance</label>
+                          </div>
+                          <div class="col-md-9">
+
+                            <div class="file-input-wrapper">
+                              <input type="file" name="letter_acceptance" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                              <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            </div>
+
+                            <div class="file-review mt-1" style="display:none;">
+                              <a id="letter_acceptance-lama" target="_blank">
+                                Lihat Dokumen sebelumnya
+                              </a>
+                            </div>
+
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="col-12">
+                        <div class="row">
+                          <div class="col-md-3">
+                            <label class="form-label">Ijazah Terakhir</label>
+                          </div>
+                          <div class="col-md-9">
+
+                            <div class="file-input-wrapper">
+                              <input type="file" name="ijazah_terakhir" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                              <small class="text-muted ps-2">jpg/png/pdf — Max 500 KB</small>
+                            </div>
+
+                            <div class="file-review mt-1" style="display:none;">
+                              <a id="ijazah_terakhir-lama" target="_blank">
+                                Lihat Dokumen sebelumnya
+                              </a>
+                            </div>
+
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
-                  </div>
 
-                  <div class="d-flex justify-content-end mt-4">
-                    <button class="btn btn-primary btn-next" data-next="#tab-verifikasi">
-                      Save & Next
-                    </button>
-                  </div>
-
+                    <div class="d-flex justify-content-end mt-4 gap-2">
+                      <button type="button" class="btn btn-secondary btn-cancel" style="display:none;">
+                        Batal
+                      </button>
+                      <button type="button" class="btn btn-primary btn-next" data-next="#tab-verifikasi">
+                        Save & Next
+                      </button>
+                    </div>
+                  </form>
                 </div>
 
                 <!-- TAB 4 – VERIFIKASI -->
@@ -460,42 +592,37 @@
                     <table class="table table-bordered">
                       <thead>
                         <tr>
-                          <th>No</th>
-                          <th>Form</th>
+                          <th width="5%">No</th>
+                          <th width="20%">Form</th>
                           <th>Field</th>
-                          <th>Status</th>
+                          <th width="15%">Status</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody id="verifikasi-body">
                         <tr>
-                          <td colspan="4" class="text-center">-</td>
+                          <td colspan="4" class="text-center text-muted">
+                            Data belum dimuat
+                          </td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
                   <h6 class="fw-bold mt-4">Account Information</h6>
-                  <p class="text-danger">Mohon Isi Seluruh Data Yang Ada</p>
+                  <p class="text-danger">
+                    Pastikan seluruh data telah lengkap sebelum melanjutkan.
+                  </p>
 
-                  <h6 class="fw-bold mt-3">Informasi Verifikasi dari Dikti</h6>
+                  <div id="status-panel" class="d-none"></div>
 
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <label>Status</label>
-                      <select class="form-select" disabled>
-                        <option>Select Status</option>
-                      </select>
-                    </div>
-
-                    <div class="col-md-6">
-                      <label>Ket. Dokumen</label>
-                      <input type="text" class="form-control" placeholder="Information" disabled>
-                    </div>
-
-                    <div class="col-12">
-                      <label>Ket. Tambahan</label>
-                      <textarea class="form-control" rows="3" placeholder="Information"></textarea>
-                    </div>
+                  <div class="d-flex justify-content-end mt-4">
+                    <button type="button" id="btn-ajukan" class="btn btn-primary" disabled>
+                      <span class="btn-text">Ajukan Permohonan</span>
+                      <span class="btn-loading d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        Mengajukan...
+                      </span>
+                    </button>
                   </div>
 
                 </div>
@@ -520,12 +647,19 @@
   <script src="assets/vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
   <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
 
   <script>
+    let ID_IZIN = <?= $ID_IZIN ? $ID_IZIN : 'null' ?>;
+    let STATUS_PENGAJUAN = 'draft';
+
+    // =========================
+    // DATA NEGARA
+    // =========================
     const countryList = [
       "Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica",
       "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan",
@@ -548,33 +682,767 @@
       "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia",
       "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia",
       "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland",
-      "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago",
-      "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
-      "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+      "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+      "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine",
+      "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu",
+      "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
     ];
 
-    // Masukkan negara sebagai opsi Select2
+    const VERIFIKASI_CONFIG = [
+      // ======================
+      // IDENTITAS
+      // ======================
+      {
+        form: 'Identitas',
+        field: 'Nama Lengkap',
+        key: 'nama_lengkap'
+      },
+      {
+        form: 'Identitas',
+        field: 'Tempat Lahir',
+        key: 'tempat_lahir'
+      },
+      {
+        form: 'Identitas',
+        field: 'Tanggal Lahir',
+        key: 'tanggal_lahir'
+      },
+      {
+        form: 'Identitas',
+        field: 'Jenis Kelamin',
+        key: 'jenis_kelamin'
+      },
+      {
+        form: 'Identitas',
+        field: 'Kebangsaan',
+        key: 'kebangsaan'
+      },
+      {
+        form: 'Identitas',
+        field: 'Email',
+        key: 'email'
+      },
+      {
+        form: 'Identitas',
+        field: 'No HP',
+        key: 'no_hp'
+      },
+      {
+        form: 'Identitas',
+        field: 'Foto',
+        key: 'foto',
+        type: 'file'
+      },
+
+      // ======================
+      // STUDI
+      // ======================
+      {
+        form: 'Studi',
+        field: 'Universitas',
+        key: 'universitas'
+      },
+      {
+        form: 'Studi',
+        field: 'Jenjang Studi',
+        key: 'jenjang_studi'
+      },
+      {
+        form: 'Studi',
+        field: 'Dok Kerjasama',
+        key: 'dok_kerjasama',
+        type: 'file'
+      },
+
+      // ======================
+      // DOKUMEN
+      // ======================
+      {
+        form: 'Dokumen',
+        field: 'Scan Paspor',
+        key: 'scan_paspor',
+        type: 'file'
+      },
+      {
+        form: 'Dokumen',
+        field: 'Surat Jaminan',
+        key: 'surat_jaminan',
+        type: 'file'
+      },
+      {
+        form: 'Dokumen',
+        field: 'Surat Pernyataan',
+        key: 'surat_pernyataan',
+        type: 'file'
+      },
+      {
+        form: 'Dokumen',
+        field: 'Surat Kesehatan',
+        key: 'surat_kesehatan',
+        type: 'file'
+      },
+      {
+        form: 'Dokumen',
+        field: 'Letter Acceptance',
+        key: 'letter_acceptance',
+        type: 'file'
+      },
+      {
+        form: 'Dokumen',
+        field: 'Ijazah Terakhir',
+        key: 'ijazah_terakhir',
+        type: 'file'
+      },
+    ];
+
+    async function loadVerifikasi() {
+      if (!ID_IZIN) return;
+
+      $('#verifikasi-body').html(`
+        <tr>
+          <td colspan="4" class="text-center">Memuat data...</td>
+        </tr>
+      `);
+
+      try {
+        const [identitas, studi, dokumen] = await Promise.all([
+          $.getJSON('../ajax/get_identitas.php', {
+            id_izin: ID_IZIN
+          }),
+          $.getJSON('../ajax/get_studi.php', {
+            id_izin: ID_IZIN
+          }),
+          $.getJSON('../ajax/get_dokumen.php', {
+            id_izin: ID_IZIN
+          })
+        ]);
+
+        const dataGabungan = {
+          ...(identitas.data || {}),
+          ...(studi.data || {}),
+          ...(dokumen.data || {})
+        };
+
+        let html = '';
+        let no = 1;
+        let semuaLengkap = true;
+
+        VERIFIKASI_CONFIG.forEach(item => {
+          const value = dataGabungan[item.key];
+
+          let lengkap = false;
+          if (item.type === 'file') {
+            lengkap = !!value;
+          } else {
+            lengkap = value !== undefined && value !== null && String(value).trim() !== '';
+          }
+
+          if (!lengkap) semuaLengkap = false;
+
+          html += `
+        <tr>
+          <td>${no++}</td>
+          <td>${item.form}</td>
+          <td>${item.field}</td>
+          <td class="text-center">
+            ${lengkap
+              ? '<span class="badge bg-success">Lengkap</span>'
+              : '<span class="badge bg-danger">Belum</span>'}
+          </td>
+        </tr>
+      `;
+        });
+
+        $('#verifikasi-body').html(html);
+
+        // AKTIFKAN / NONAKTIFKAN BUTTON
+        $('#btn-ajukan').prop('disabled', !semuaLengkap);
+
+      } catch (err) {
+        $('#verifikasi-body').html(`
+          <tr>
+            <td colspan="4" class="text-center text-danger">
+              Gagal memuat data verifikasi
+            </td>
+          </tr>
+        `);
+      }
+    }
+
     $(document).ready(function() {
+
+      function lockAllAfterSubmitted() {
+        $('input, select, textarea').prop('disabled', true);
+        $('.btn-next, .btn-edit, .btn-cancel').remove();
+        $('.file-input-wrapper').remove();
+        $('.file-review').show();
+        $('#btn-ajukan').remove();
+        $('#info-pengajuan').removeClass('d-none');
+      }
+
+      function checkStatusPengajuan() {
+        if (!ID_IZIN) return;
+
+        $.getJSON('../ajax/get_status_pengajuan.php', {
+          id_izin: ID_IZIN
+        }, function(res) {
+
+          if (!res.status) return;
+
+          STATUS_PENGAJUAN = res.status_pengajuan;
+
+          renderStatusUI(
+            res.status_pengajuan,
+            res.catatan_admin ?? null
+          );
+
+          if (STATUS_PENGAJUAN === 'tidak lengkap') {
+            $('#btn-ajukan').prop('disabled', false);
+          }
+        });
+      }
+
+      function lockAllAfterSubmitted() {
+        $('input, select, textarea').prop('disabled', true);
+        $('.btn-next, .btn-edit, .btn-cancel').remove();
+        $('.file-input-wrapper').remove();
+        $('.file-review').show();
+        $('#btn-ajukan').remove();
+      }
+
+      function unlockAllForms() {
+        $('input, select, textarea').prop('disabled', false);
+        $('.file-input-wrapper').show();
+        $('.file-review').hide();
+      }
+
+      function renderStatusUI(status, note = null) {
+
+        const panel = $('#status-panel');
+        panel.removeClass('d-none').empty();
+
+        switch (status) {
+
+          case 'diajukan':
+          case 'diverifikasi':
+            lockAllAfterSubmitted();
+            panel.html(`
+              <div class="alert alert-info">
+                <h6 class="fw-bold mb-1">Pengajuan Sedang Diproses</h6>
+                <p class="mb-2">
+                  Permohonan izin belajar Anda sedang dalam proses verifikasi oleh admin.
+                </p>
+                <small class="text-muted">
+                  Silahkan memantau perkembangan melalui
+                      <a href="daftar.php" class="fw-bold text-decoration-none">
+                        Daftar Pengajuan
+                      </a>.
+                </small>
+              </div>
+            `);
+            break;
+
+            // ======================
+          case 'tidak lengkap':
+            STATUS_PENGAJUAN = 'tidak lengkap';
+
+            lockForm('form-identitas');
+            lockForm('form-studi');
+            lockForm('form-dokumen');
+
+            const btn = $('#btn-ajukan');
+
+            btn.prop('disabled', false)
+              .addClass('btn-primary');
+
+            btn.find('.btn-text').text('Ajukan Ulang Permohonan');
+
+            btn.find('.btn-loading').html(`
+              <span class="spinner-border spinner-border-sm"></span>
+              Mengajukan Ulang...
+            `);
+
+            panel.html(`
+              <div class="alert alert-warning">
+                <h6 class="fw-bold mb-1">Pengajuan Dikembalikan</h6>
+                <p class="mb-2">
+                  Data atau dokumen Anda belum lengkap dan perlu diperbaiki.
+                </p>
+                ${note ? `<div class="border-start ps-2"><small>${note}</small></div>` : ''}
+                <small class="text-muted">
+                  Klik <b>Edit Data</b> pada form yang perlu diperbaiki,
+                  lalu ajukan ulang permohonan.
+                </small>
+              </div>
+            `);
+            break;
+
+            // ======================
+          case 'ditolak':
+            lockAllAfterSubmitted();
+            panel.html(`
+              <div class="alert alert-dark">
+                <h6 class="fw-bold mb-1">Pengajuan Ditolak</h6>
+                <p class="mb-2">
+                  Permohonan izin belajar Anda <b>ditolak secara permanen</b>.
+                </p>
+                ${note ? `<div class="border-start ps-2"><small>${note}</small></div>` : ''}
+                <small class="text-muted">
+                  Silahkan membuat pengajuan baru.
+                </small>
+              </div>
+            `);
+            break;
+
+            // ======================
+          case 'disetujui':
+            lockAllAfterSubmitted();
+            panel.html(`
+              <div class="alert alert-success">
+                <h6 class="fw-bold mb-1">Izin Belajar Disetujui</h6>
+                <p>Selamat! Anda telah resmi mendapatkan izin belajar.</p>
+              </div>
+            `);
+            break;
+
+          default:
+            panel.addClass('d-none');
+        }
+      }
+
+      $('#btn-ajukan').on('click', function() {
+        if (!ID_IZIN) return;
+
+        Swal.fire({
+          title: 'Ajukan Permohonan?',
+          text: 'Pastikan seluruh data sudah lengkap dan benar.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, Ajukan',
+          cancelButtonText: 'Batal'
+        }).then(result => {
+          if (!result.isConfirmed) return;
+
+          const btn = $('#btn-ajukan');
+          btn.prop('disabled', true);
+          btn.find('.btn-text').addClass('d-none');
+          btn.find('.btn-loading').removeClass('d-none');
+
+          $.ajax({
+            url: '../ajax/submit_pengajuan.php',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+              id_izin: ID_IZIN
+            },
+            success: function(res) {
+              if (res.status) {
+                Swal.fire(
+                  'Berhasil',
+                  res.message,
+                  'success'
+                ).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire(
+                  'Gagal',
+                  res.message,
+                  'error'
+                );
+              }
+            },
+            error: function() {
+              Swal.fire(
+                'Error',
+                'Terjadi kesalahan server',
+                'error'
+              );
+            },
+            complete: function() {
+              btn.prop('disabled', false);
+              btn.find('.btn-text').removeClass('d-none');
+              btn.find('.btn-loading').addClass('d-none');
+            }
+          });
+        });
+      });
+
+      // =========================
+      // INIT SELECT2 NEGARA
+      // =========================
       $(".select-country").each(function() {
         countryList.forEach(c => $(this).append(new Option(c, c)));
-
         $(this).select2({
           placeholder: "Pilih",
-          allowClear: false,
           width: "100%"
         });
       });
 
-      // tombol NEXT di semua tab
-      $(".btn-next").on("click", function() {
-        let targetTab = $(this).data("next");
-        $(targetTab).click();
+      // =========================
+      // CREATE / LOAD IZIN (PENGAJUAN BARU)
+      // =========================
+      if (ID_IZIN) {
 
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
+        loadIdentitas();
+        loadStudi();
+        loadDokumen();
+
+        setTimeout(checkStatusPengajuan, 300);
+
+      } else {
+
+        $.post("../ajax/create_izin.php", {
+          type: 'baru'
+        }, function(res) {
+
+          if (res.status) {
+            ID_IZIN = res.id_izin;
+            $("input[name='id_izin']").val(ID_IZIN);
+          } else {
+            Swal.fire("Gagal", res.message, "error");
+          }
+
+        }, "json");
+
+      }
+
+      // =========================
+      // CORE LOCK / UNLOCK FORM
+      // =========================
+      function lockForm(formId) {
+        const form = $('#' + formId);
+
+        form.find('input, select, textarea').prop('disabled', true);
+
+        hideFileInputs(formId);
+
+        form.find('.btn-next')
+          .text('Edit Data')
+          .removeClass('btn-next')
+          .addClass('btn-edit');
+
+        form.find('.btn-cancel').hide();
+      }
+
+      function unlockForm(formId) {
+        const form = $('#' + formId);
+
+        form.find('input, select, textarea').prop('disabled', false);
+
+        showFileInputs(formId);
+
+        form.find('.btn-edit')
+          .text('Save & Next')
+          .removeClass('btn-edit')
+          .addClass('btn-next');
+
+        form.find('.btn-cancel').show();
+      }
+
+      function getForm(btn) {
+        return $(btn).closest('form');
+      }
+
+      // =========================
+      // Fungsi populate form
+      // =========================
+      function populateFormIdentitas(data) {
+        const form = $('#form-identitas')[0];
+
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+            const el = form.elements[key];
+            if (el) {
+              if (el.type === "radio") {
+                $(`input[name="${key}"][value="${data[key]}"]`).prop("checked", true);
+              } else if ($(el).hasClass('select2-hidden-accessible')) {
+                $(el).val(data[key]).trigger('change');
+              } else if (key === "foto") {
+                if (data[key]) {
+                  let fotoPath = data[key].includes('uploads/foto/') ? data[key] : '../uploads/foto/' + data[key];
+                  if (!fotoPath.startsWith('../')) fotoPath = '../' + fotoPath;
+
+                  $('#foto-preview').attr('src', fotoPath).show();
+                  $('#foto_lama').val(data[key]);
+
+                  $("input[name='foto']").val('');
+                } else {
+                  $('#foto-preview').hide().attr('src', '');
+                  $("input[name='foto']").val('');
+                  $('#foto_lama').val('');
+                }
+              } else {
+                el.value = data[key];
+              }
+            }
+          }
+        }
+      }
+
+      function populateFormStudi(data) {
+        const form = $('#form-studi')[0];
+
+        for (const key in data) {
+          const el = form.elements[key];
+          if (!el) continue;
+
+          if (el.type === 'file') {
+            continue;
+          }
+
+          el.value = data[key];
+        }
+
+        if (data.dok_kerjasama) {
+          let docPath = data.dok_kerjasama;
+
+          if (!docPath.includes('uploads/dokumen/')) {
+            docPath = 'uploads/dokumen/' + docPath;
+          }
+
+          if (!docPath.startsWith('../')) {
+            docPath = '../' + docPath;
+          }
+
+          $('#dokumen-lama')
+            .attr('href', docPath)
+            .text('Lihat dokumen sebelumnya')
+            .show();
+
+          $('#dok_kerjasama_lama').val(data.dok_kerjasama);
+        }
+      }
+
+      function populateFormDokumen(data) {
+        const form = $('#form-dokumen');
+
+        for (const key in data) {
+
+          const input = form.find(`[name="${key}"]`);
+
+          // =====================
+          // FILE INPUT
+          // =====================
+          if (input.attr('type') === 'file') {
+
+            if (data[key]) {
+              let path = data[key];
+
+              if (path.includes('uploads/')) {
+                if (!path.startsWith('../')) path = '../' + path;
+              } else {
+                path = '../uploads/dokumen/' + path;
+              }
+
+              $('#' + key + '-lama')
+                .attr('href', path)
+                .closest('.file-review')
+                .show();
+            }
+
+            continue;
+          }
+
+          // =====================
+          // INPUT BIASA
+          // =====================
+          input.val(data[key]);
+        }
+
+        // default setelah load → VIEW MODE
+        hideFileInputs('form-dokumen');
+      }
+
+      function hideFileInputs(formId) {
+        const form = $('#' + formId);
+
+        form.find('.file-input-wrapper').hide();
+        form.find('.file-review').show();
+      }
+
+      function showFileInputs(formId) {
+        const form = $('#' + formId);
+
+        form.find('.file-input-wrapper').show();
+        form.find('.file-review').hide();
+      }
+
+
+      // =========================
+      // SAVE (BTN NEXT) - GENERIC
+      // =========================
+      $(document).on('click', '.btn-next', function() {
+
+        if (['diajukan', 'diverifikasi', 'ditolak', 'disetujui'].includes(STATUS_PENGAJUAN)) {
+          Swal.fire(
+            'Tidak Diizinkan',
+            'Status pengajuan tidak memungkinkan perubahan data.',
+            'info'
+          );
+          return;
+        }
+
+        const form = getForm(this);
+        const formId = form.attr('id');
+        const actionUrl = form.data('action');
+        const nextTab = $(this).data('next');
+
+        if (!actionUrl) {
+          if (nextTab) $(nextTab).click();
+          return;
+        }
+
+        const formData = new FormData(form[0]);
+        formData.append('id_izin', ID_IZIN);
+
+        Swal.fire({
+          title: 'Menyimpan...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        $.ajax({
+          url: actionUrl,
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          dataType: 'json',
+          success(res) {
+            if (!res.status) {
+              Swal.fire('Validasi Gagal', res.message, 'error');
+              return;
+            }
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: res.message ?? 'Data berhasil disimpan',
+              timer: 1200,
+              showConfirmButton: false
+            });
+
+            // preview foto (identitas saja)
+            if (formId === 'form-identitas' && res.data?.foto) {
+              let foto = res.data.foto;
+              let path = foto.includes('uploads/foto/') ? foto : '../uploads/foto/' + foto;
+              if (!path.startsWith('../')) path = '../' + path;
+
+              $('#foto-preview').attr('src', path).show();
+              $('#foto_lama').val(foto);
+              $("input[name='foto']").val('');
+            }
+
+            lockForm(formId);
+
+            setTimeout(() => {
+              if (nextTab) $(nextTab).click();
+              if (nextTab === '#tab-verifikasi') {
+                setTimeout(loadVerifikasi, 300);
+              }
+              window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+              });
+            }, 1300);
+          },
+          error() {
+            Swal.fire('Error', 'Terjadi kesalahan server', 'error');
+          }
         });
       });
+
+      // =========================
+      // EDIT DATA
+      // =========================
+      $(document).on('click', '.btn-edit', function() {
+        const formId = getForm(this).attr('id');
+        unlockForm(formId);
+      });
+
+      // =========================
+      // BATAL EDIT
+      // =========================
+      $(document).on('click', '.btn-cancel', function() {
+        const formId = getForm(this).attr('id');
+        if (formId === 'form-identitas') loadIdentitas();
+        if (formId === 'form-studi') loadStudi();
+        if (formId === 'form-dokumen') loadDokumen();
+        lockForm(formId);
+      });
+
+      // =========================
+      // LOAD IDENTITAS
+      // =========================
+      function loadIdentitas() {
+        if (!ID_IZIN) return;
+
+        $.getJSON('../ajax/get_identitas.php', {
+          id_izin: ID_IZIN
+        }, function(res) {
+          if (res.status && res.data) {
+            populateFormIdentitas(res.data);
+            lockForm('form-identitas');
+          }
+        });
+      }
+
+      // =========================
+      // LOAD STUDI
+      // =========================
+      function loadStudi() {
+        if (!ID_IZIN) return;
+
+        $.getJSON('../ajax/get_studi.php', {
+          id_izin: ID_IZIN
+        }, function(res) {
+          if (res.status && res.data) {
+            populateFormStudi(res.data);
+            lockForm('form-studi');
+          }
+        });
+      }
+
+      // =========================
+      // LOAD DOKUMEN
+      // =========================
+      function loadDokumen() {
+        if (!ID_IZIN) return;
+
+        $.getJSON('../ajax/get_dokumen.php', {
+          id_izin: ID_IZIN
+        }, function(res) {
+
+          if (!res.status) return;
+
+          if (!res.data) {
+            unlockForm('form-dokumen');
+            return;
+          }
+
+          populateFormDokumen(res.data);
+          if (res.data.id_dokumen) {
+            lockForm('form-dokumen');
+          } else {
+            unlockForm('form-dokumen');
+          }
+        });
+      }
+
+      // =========================
+      // TAB EVENT
+      // =========================
+      $('#tab-studi').on('shown.bs.tab', function() {
+        loadStudi();
+      });
+      $('#tab-dokumen').on('shown.bs.tab', function() {
+        loadDokumen();
+      });
+      $('#tab-verifikasi').on('shown.bs.tab', function() {
+        loadVerifikasi();
+      });
+
     });
   </script>
 

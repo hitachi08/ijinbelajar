@@ -58,7 +58,7 @@ if (!password_verify($password, $user['password'])) {
 if (is_null($user['email_verified_at'])) {
     response(
         'error',
-        'Akun belum diverifikasi. Silakan cek email Anda.'
+        'Akun belum diverifikasi. Silahkan cek email Anda.'
     );
 }
 

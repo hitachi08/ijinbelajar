@@ -77,7 +77,7 @@
 --------------------------------------------------------------*/
 body {
   color: var(--default-color);
-  background-color: var(--background-color);
+  background-color: #e5e7eb !important;
   font-family: var(--heading-font);
 }
 
@@ -2193,4 +2193,8 @@ span.text-danger {
   top: 8px;
   right: 14px;
   width: 20px;
+}
+
+button.swal2-confirm {
+  background-color: #2487ce !important;
 }

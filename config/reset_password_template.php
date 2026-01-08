@@ -26,7 +26,7 @@ Sistem Izin Belajar Mahasiswa Asing
 <h3>Reset Password</h3>
 <p>
 Kami menerima permintaan reset password akun Anda.
-Silakan klik tombol di bawah ini:
+Silahkan klik tombol di bawah ini:
 </p>
 
 <div style="text-align:center;margin:30px 0">
@@ -42,7 +42,7 @@ RESET PASSWORD
 
 <p>
 Jika Anda tidak merasa melakukan permintaan ini,
-silakan abaikan email ini.
+silahkan abaikan email ini.
 </p>
 
 <hr>

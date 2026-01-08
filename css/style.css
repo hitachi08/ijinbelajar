@@ -479,3 +479,7 @@
 }
 
 /* Style Sendiri */
+
+button.swal2-confirm {
+  background-color: #2487ce !important;
+}

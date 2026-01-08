@@ -37,7 +37,7 @@ if ($token) {
 
         $status  = 'success';
         $title   = 'Email Berhasil Diverifikasi';
-        $message = 'Akun Anda sudah aktif. Silakan login.';
+        $message = 'Akun Anda sudah aktif. Silahkan login.';
         $image   = '../img/verify.png';
         $button  = [
             'text' => 'Login',

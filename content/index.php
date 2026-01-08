@@ -1,3 +1,17 @@
+<?php
+session_start();
+require '../config/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+  header('Location: ../login.php');
+  exit;
+}
+
+$stmt = $conn->prepare("SELECT username, email, profile_photo FROM users WHERE id_user=?");
+$stmt->execute([$_SESSION['user_id']]);
+$user = $stmt->fetch();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -42,37 +56,33 @@
         </div>
 
         <!-- Row 1: Statistik Pengajuan -->
-        <div class="row g-4 mb-5">
+        <div class="row g-4 mb-5" data-aos="fade-up">
 
-          <!-- Semua Pengajuan -->
-          <div class="col-md-6 col-lg-3" data-aos="fade-up">
+          <div class="col-md-6 col-lg-3">
             <div class="card shadow-sm border-0 p-3 h-100">
               <h5 class="fw-bold">Semua Pengajuan</h5>
-              <h2 class="text-primary fw-bold">12</h2>
+              <h2 class="text-primary fw-bold" id="stat-semua">0</h2>
             </div>
           </div>
 
-          <!-- Diterima -->
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="col-md-6 col-lg-3">
             <div class="card shadow-sm border-0 p-3 h-100">
               <h5 class="fw-bold">Pengajuan Diterima</h5>
-              <h2 class="text-success fw-bold">4</h2>
+              <h2 class="text-success fw-bold" id="stat-diterima">0</h2>
             </div>
           </div>
 
-          <!-- Dalam Proses -->
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-md-6 col-lg-3">
             <div class="card shadow-sm border-0 p-3 h-100">
               <h5 class="fw-bold">Dalam Proses</h5>
-              <h2 class="text-warning fw-bold">5</h2>
+              <h2 class="text-warning fw-bold" id="stat-proses">0</h2>
             </div>
           </div>
 
-          <!-- Ditolak -->
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+          <div class="col-md-6 col-lg-3">
             <div class="card shadow-sm border-0 p-3 h-100">
               <h5 class="fw-bold">Pengajuan Ditolak</h5>
-              <h2 class="text-danger fw-bold">3</h2>
+              <h2 class="text-danger fw-bold" id="stat-ditolak">0</h2>
             </div>
           </div>
 
@@ -102,37 +112,59 @@
 
                   <!-- TAB 1: PENGATURAN AKUN -->
                   <div class="tab-pane fade show active" id="akun" role="tabpanel">
-                    <form>
+                    <form id="formAccount">
                       <div class="row g-3">
                         <div class="col-md-6">
                           <label class="form-label">Username</label>
-                          <input type="text" class="form-control">
+                          <input type="text" class="form-control"
+                            value="<?= htmlspecialchars($user['username']) ?>"
+                            readonly>
                         </div>
 
                         <div class="col-md-6">
                           <label class="form-label">Email</label>
-                          <input type="email" class="form-control">
+                          <input type="email" class="form-control"
+                            value="<?= htmlspecialchars($user['email']) ?>"
+                            readonly>
                         </div>
 
                         <div class="col-md-6">
-                          <label class="form-label">Password Lama</label>
-                          <input type="password" class="form-control">
+                          <label>Password Lama</label>
+                          <div class="input-group">
+                            <input type="password" name="old_password" id="old_password" class="form-control">
+                            <span class="input-group-text toggle-password" data-target="old_password">
+                              <i class="bi bi-eye"></i>
+                            </span>
+                          </div>
                         </div>
 
                         <div class="col-md-6">
-                          <label class="form-label">Password Baru</label>
-                          <input type="password" class="form-control">
+                          <label>Password Baru</label>
+                          <div class="input-group">
+                            <input type="password" name="new_password" id="new_password" class="form-control">
+                            <span class="input-group-text toggle-password" data-target="new_password">
+                              <i class="bi bi-eye"></i>
+                            </span>
+                          </div>
                         </div>
 
                         <div class="col-12">
-                          <label class="form-label">Konfirmasi Password Baru</label>
-                          <input type="password" class="form-control">
+                          <label>Konfirmasi Password Baru</label>
+                          <div class="input-group">
+                            <input type="password" name="confirm_password" id="confirm_password" class="form-control">
+                            <span class="input-group-text toggle-password" data-target="confirm_password">
+                              <i class="bi bi-eye"></i>
+                            </span>
+                          </div>
                         </div>
 
                       </div>
 
                       <div class="mt-4">
-                        <button type="submit" class="btn btn-primary px-4">Simpan</button>
+                        <button type="submit" class="btn btn-primary px-4" id="btnAccount">
+                          <span class="btn-text">Simpan</span>
+                          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                       </div>
 
                     </form>
@@ -141,19 +173,20 @@
 
                   <!-- TAB 2: UBAH FOTO PROFIL -->
                   <div class="tab-pane fade" id="foto" role="tabpanel">
-                    <div class="text-center">
-                      <img src="assets/img/user.png"
-                        alt="Foto Profil"
-                        class="rounded-circle mb-3"
-                        style="width: 120px; height:120px; object-fit:cover;">
-                      <div class="mb-3 text-start">
-                        <label class="form-label">Unggah Foto <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control w-100 mx-auto">
-                      </div>
+                    <form id="formPhoto" enctype="multipart/form-data">
                       <div class="text-start">
-                        <button class="btn btn-primary px-4">Simpan</button>
+                        <div class="mb-4">
+                          <label class="form-label">Unggah Foto <span class="text-danger">*</span></label>
+                          <input type="file" name="photo" class="form-control mb-2" accept="image/*">
+                          <small>Kosongkan jika tidak ingin mengubah profil.</small>
+                        </div>
+                        <button class="btn btn-primary" type="submit" id="btnPhoto">
+                          <span class="btn-text">Simpan</span>
+                          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                       </div>
-                    </div>
+                    </form>
+
                   </div>
                 </div>
               </div>
@@ -178,6 +211,106 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <script>
+    // Show Hide Password
+    $(document).on('click', '.toggle-password', function() {
+      const inputId = $(this).data('target');
+      const input = $('#' + inputId);
+      const icon = $(this).find('i');
+
+      if (input.attr('type') === 'password') {
+        input.attr('type', 'text');
+        icon.removeClass('bi-eye').addClass('bi-eye-slash');
+      } else {
+        input.attr('type', 'password');
+        icon.removeClass('bi-eye-slash').addClass('bi-eye');
+      }
+    });
+
+    // Kirim Data Hasil Submit
+
+    // Kirim Data Ubah Password
+    $('#formAccount').submit(function(e) {
+      e.preventDefault();
+
+      const btn = $('#btnAccount');
+      const spinner = btn.find('.spinner-border');
+      const text = btn.find('.btn-text');
+
+      spinner.removeClass('d-none');
+      text.text('Memproses...');
+
+      $.post('../api/api_update_account.php', $(this).serialize(), function(res) {
+        spinner.addClass('d-none');
+        text.text('Simpan');
+
+        if (res.status === 'success') {
+          Swal.fire('Berhasil', 'Password berhasil diperbarui', 'success');
+          $('#formAccount')[0].reset();
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }, 'json');
+    });
+
+    // Kirim Data Ubah Foto
+    $('#formPhoto').submit(function(e) {
+      e.preventDefault();
+
+      const btn = $('#btnPhoto');
+      const spinner = btn.find('.spinner-border');
+      const text = btn.find('.btn-text');
+
+      spinner.removeClass('d-none');
+      text.text('Memproses...');
+
+      let data = new FormData(this);
+
+      $.ajax({
+        url: '../api/api_update_photo.php',
+        type: 'POST',
+        data: data,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(res) {
+          spinner.addClass('d-none');
+          text.text('Simpan');
+
+          if (res.status === 'success') {
+            Swal.fire('Berhasil', 'Foto profil diperbarui', 'success')
+              .then(() => location.reload());
+          } else {
+            Swal.fire('Gagal', res.message, 'error');
+          }
+        }
+      });
+    });
+
+    $(document).ready(function() {
+      loadDashboardStatistik();
+    });
+
+    function loadDashboardStatistik() {
+      $.ajax({
+        url: '../api/api_status_pengajuan.php',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+          if (!res.status) return;
+
+          $('#stat-semua').text(res.data.total);
+          $('#stat-diterima').text(res.data.diterima);
+          $('#stat-proses').text(res.data.proses);
+          $('#stat-ditolak').text(res.data.ditolak);
+        }
+      });
+    }
+  </script>
 
 </body>
 

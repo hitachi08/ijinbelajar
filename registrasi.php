@@ -214,7 +214,7 @@
                                 html: `
                         <p>${response.message}</p>
                         <p class="text-muted mt-2">
-                            📧 Silakan cek email Anda untuk proses verifikasi akun.
+                            📧 Silahkan cek email Anda untuk proses verifikasi akun.
                         </p>
                     `
                             }).then(() => {

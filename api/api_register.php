@@ -105,7 +105,7 @@ $insert = $stmt->execute([
 ]);
 
 if (!$insert) {
-    response('error', 'Registrasi gagal. Silakan coba lagi.');
+    response('error', 'Registrasi gagal. Silahkan coba lagi.');
 }
 
 /* =========================
@@ -120,5 +120,5 @@ if (!sendVerificationEmail($email, $token)) {
 
 response(
     'success',
-    'Registrasi berhasil. Silakan cek email Anda untuk verifikasi akun.'
+    'Registrasi berhasil. Silahkan cek email Anda untuk verifikasi akun.'
 );
